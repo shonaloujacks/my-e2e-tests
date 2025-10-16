@@ -1,4 +1,5 @@
 const { test, describe, expect, beforeEach } = require('@playwright/test')
+const { loginWith, createNote } = require('./helper')
 
 describe('Note app', () => {
   beforeEach(async ({ page, request }) => {
@@ -11,7 +12,8 @@ describe('Note app', () => {
       }
     })
      await page.goto('http://localhost:5173')
-  })
+    })
+
   test('front page can be opened', async ({ page }) => {
 
     const locator = page.getByText('Notes')
@@ -20,22 +22,13 @@ describe('Note app', () => {
 })
 
  test('user can log in', async ({ page }) => {
-   
-    await page.getByRole('button', { name: 'login' }).click()
-    await page.getByLabel('Username').fill('mluukkai')
-    await page.getByLabel('Password').fill('salainen')
-
-    await page.getByRole('button', { name: 'login' }).click()
-  
+    await loginWith(page, 'mluukkai', 'salainen')
     await expect(page.getByText('Matti Luukkainen logged in')).toBeVisible()
 
   })
 
    test('login fails with wrong password', async ({ page }) => {
-    await page.getByRole('button', { name: 'login' }).click()
-    await page.getByLabel('username').fill('mluukkai')
-    await page.getByLabel('password').fill('wrong')
-    await page.getByRole('button', { name: 'login' }).click()
+    await loginWith(page, 'mluukkai', 'wrong')
 
     const errorDiv = page.locator('.error')
     await expect(errorDiv).toContainText('wrong credentials')
@@ -47,24 +40,17 @@ describe('Note app', () => {
 
   describe('when logged in', () => {
     beforeEach(async ({ page }) => {
-      await page.getByRole('button', { name: 'login' }).click()
-      await page.getByLabel('username').fill('mluukkai')
-      await page.getByLabel('password').fill('salainen')
-      await page.getByRole('button', { name: 'login' }).click()
-    })
+      await loginWith(page, 'mluukkai', 'salainen')
+      })
 
-    // test('a new note can be created', async ({ page }) => {
-    //   await page.getByRole('button', { name: 'new note' }).click()
-    //   await page.getByTestId('note-input').fill('a note created by playwright')
-    //   await page.getByRole('button', { name: 'save' }).click()
-    //   await expect(page.getByText('a note created by playwright')).toBeVisible()
-    // })
+    test('a new note can be created', async ({ page }) => {
+      await createNote(page, 'a note created by playwright')
+      await expect(page.getByText('a note created by playwright')).toBeVisible()
+    })
 
     describe('and a note exists', () => {
       beforeEach(async ({ page }) => {
-        await page.getByRole('button', { name: 'new note' }).click()
-        await page.getByRole('textbox').fill('another note by playwright')
-        await page.getByRole('button', { name: 'save' }).click()
+       await createNote(page, 'a note created by playwright')
       })
   
       test('importance can be changed', async ({ page }) => {
